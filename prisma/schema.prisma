@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id                String         @id @default(cuid())
+  username          String        @unique
+  email             String        @unique
+  password          String
+  role              String        @default("USER")
+  status            String        @default("active")
+  stripeCustomerId  String?      @unique
+  subscriptions     Subscription[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  notificationSettings NotificationSettings?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Subscription {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id])
+  planId              String
+  plan                Plan      @relation(fields: [planId], references: [id])
+  status              String    @default("active") // active, cancelled, past_due
+  stripeSubscriptionId String?  @unique
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([planId])
+}
+
+model Plan {
+  id              String         @id @default(cuid())
+  name            String        @unique
+  description     String
+  price           Float
+  features        String[]
+  isPopular       Boolean       @default(false)
+  status          String        @default("active")
+  stripePriceId   String?      @unique
+  subscriptions   Subscription[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model NotificationSettings {
+  id                 String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(false)
+  weeklyDigest      Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
