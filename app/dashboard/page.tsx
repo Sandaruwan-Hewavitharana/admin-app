@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { DollarSign, Users, ShoppingCart, BarChart, User, Clock } from "lucide-react"
+import { DollarSign, Users, ShoppingCart } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { toast } from "sonner"
-import { Bar, BarChart as Chart } from "@tremor/react"
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton"
 
 interface DashboardStats {
@@ -24,15 +23,9 @@ interface Activity {
   time: string
 }
 
-interface ChartData {
-  createdAt: string
-  _count: number
-}
-
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
-  const [chartData, setChartData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -47,7 +40,6 @@ export default function DashboardPage() {
       const data = await res.json()
       setStats(data.stats)
       setRecentActivity(data.recentActivity)
-      setChartData(data.chartData)
     } catch (error) {
       toast.error('Failed to load dashboard data')
     } finally {
@@ -91,33 +83,68 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
-          {/* Similar cards for other stats... */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${stats?.totalRevenue.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Lifetime revenue
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Monthly Orders</CardTitle>
+                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.ordersThisMonth}</div>
+                <p className="text-xs text-muted-foreground">
+                  Orders this month
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.conversionRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  User conversion rate
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-          <Card className="lg:col-span-4 overflow-hidden">
-            <CardHeader>
-              <CardTitle>Subscription Growth</CardTitle>
-              <CardDescription>Monthly subscriptions over time</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[300px] w-full overflow-auto">
-                <Chart
-                  className="min-w-[600px]"
-                  data={chartData}
-                  index="createdAt"
-                  categories={["_count"]}
-                  colors={["blue"]}
-                  valueFormatter={(value) => `${value} subs`}
-                  yAxisWidth={40}
-                >
-                  <Bar />
-                </Chart>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-3">
+        <div className="grid gap-4 grid-cols-1">
+          <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
               <CardDescription>Latest actions on the platform</CardDescription>
