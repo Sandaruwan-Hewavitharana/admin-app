@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+type UserRole = "ADMIN" | "USER"
+
 interface User {
   id: string
   username: string
   email: string
-  role: "ADMIN" | "USER"
+  role: UserRole
   status: string
   createdAt: Date
 }
@@ -29,7 +31,7 @@ export function UserDialog({ isOpen, onClose, onSubmit, user, mode }: UserDialog
     username: user?.username || "",
     email: user?.email || "",
     password: "",
-    role: user?.role || "USER",
+    role: (user?.role || "USER") as UserRole,
     status: user?.status || "active"
   })
 
@@ -98,7 +100,7 @@ export function UserDialog({ isOpen, onClose, onSubmit, user, mode }: UserDialog
               <Label htmlFor="role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
+                onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
                 disabled={isViewOnly}
               >
                 <SelectTrigger>

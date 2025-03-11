@@ -62,7 +62,7 @@ export default function UsersTable({ users }: { users: User[] }) {
                 >
                   {user.status}
                 </Badge>
-              </TableCell>
+              </TableCell>2
               <TableCell className="text-gray-400">
                 {new Date(user.createdAt).toLocaleDateString()}
               </TableCell>
