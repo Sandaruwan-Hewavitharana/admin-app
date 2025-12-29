@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { BarChart, ChevronDown, CreditCard, LayoutDashboard, LogOut, Menu, Settings, User, X } from "lucide-react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -46,16 +46,42 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
   const userNavItems = [
     {
       title: "Dashboard",
+      href: "/my-account",
+      icon: LayoutDashboard,
+      isActive: pathname === "/my-account",
+    },
+    {
+      title: "Billing",
+      href: "/my-account/billing",
+      icon: CreditCard,
+      isActive: pathname === "/my-account/billing",
+    },
+    {
+      title: "Settings",
+      href: "/my-account/settings",
+      icon: Settings,
+      isActive: pathname === "/my-account/settings",
+    },
+  ]
+
+  const adminNavItems = [
+    {
+      title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
       isActive: pathname === "/dashboard",
     },
     {
-      title: "Orders",
-      href: "/orders",
+      title: "Users",
+      href: "/users",
+      icon: User,
+      isActive: pathname === "/users",
+    },
+    {
+      title: "Billing",
+      href: "/billing",
       icon: CreditCard,
-      isActive: pathname === "/orders",
-      badge: "3",
+      isActive: pathname === "/billing",
     },
     {
       title: "Settings",
@@ -65,35 +91,7 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
     },
   ]
 
-  const adminNavItems = [
-    {
-      title: "Dashboard",
-      href: "/admin/dashboard",
-      icon: LayoutDashboard,
-      isActive: pathname === "/admin/dashboard",
-    },
-    {
-      title: "Users",
-      href: "/admin/users",
-      icon: User,
-      isActive: pathname === "/admin/users",
-      badge: "12",
-    },
-    {
-      title: "Analytics",
-      href: "/admin/analytics",
-      icon: BarChart,
-      isActive: pathname === "/admin/analytics",
-    },
-    {
-      title: "Settings",
-      href: "/admin/settings",
-      icon: Settings,
-      isActive: pathname === "/admin/settings",
-    },
-  ]
-
-  const navItems = isAdmin ? adminNavItems : userNavItems
+  const navItems = session?.user?.role === 'ADMIN' ? adminNavItems : userNavItems
 
   const NavContent = () => (
     <div className="flex h-full flex-col">
@@ -139,11 +137,13 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
             <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholder-user.jpg" alt="User avatar" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>
+                  {session?.user?.username?.substring(0, 2).toUpperCase() || 'U'}
+                </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium">John Doe</span>
-                <span className="text-xs text-muted-foreground">john@example.com</span>
+                <span className="font-medium">{session?.user?.username || 'User'}</span>
+                <span className="text-xs text-muted-foreground">{session?.user?.email || ''}</span>
               </div>
               <ChevronDown className="ml-auto h-4 w-4" />
             </Button>
@@ -157,7 +157,10 @@ export function DashboardLayout({ children, isAdmin = false }: DashboardLayoutPr
                 Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem 
+              className="text-destructive cursor-pointer"
+              onClick={() => signOut({ callbackUrl: '/login' })}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>

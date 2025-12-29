@@ -94,7 +94,7 @@ export default function AuthForm() {
       if (sessionData?.user?.role === 'ADMIN') {
         router.push("/dashboard")
       } else {
-        router.push("/unauthorized")
+        router.push("/my-account")
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")

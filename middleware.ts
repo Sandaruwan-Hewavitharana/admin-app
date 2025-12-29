@@ -11,13 +11,16 @@ export async function middleware(request: NextRequest) {
                       request.nextUrl.pathname.startsWith('/billing') ||
                       request.nextUrl.pathname.startsWith('/settings')
   
-  // If no token, redirect to login
-  if (!token) {
+  // Check if accessing user account page
+  const isUserRoute = request.nextUrl.pathname.startsWith('/my-account')
+  
+  // If no token and trying to access protected routes, redirect to login
+  if (!token && (isAdminRoute || isUserRoute)) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // If trying to access admin routes but not an admin
-  if (isAdminRoute && token.role !== 'ADMIN') {
+  if (isAdminRoute && token?.role !== 'ADMIN') {
     return NextResponse.redirect(new URL('/unauthorized', request.url))
   }
   
@@ -31,5 +34,6 @@ export const config = {
     '/users/:path*',
     '/settings/:path*',
     '/billing/:path*',
+    '/my-account/:path*',
   ]
 } 

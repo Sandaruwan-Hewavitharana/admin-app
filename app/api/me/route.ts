@@ -2,36 +2,48 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import bcrypt from 'bcryptjs'
 
+// Get current user's profile
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user) {
       return new NextResponse(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401 }
       )
     }
 
-    const users = await prisma.user.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
       select: {
         id: true,
         username: true,
         email: true,
         role: true,
         status: true,
-        createdAt: true
+        createdAt: true,
+        updatedAt: true,
+        subscriptions: {
+          include: {
+            plan: true
+          }
+        },
+        notificationSettings: true
       }
     })
 
-    return NextResponse.json(users)
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ error: 'User not found' }),
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(user)
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching user profile:', error)
     return new NextResponse(
       JSON.stringify({ error: 'Internal Server Error' }),
       { status: 500 }
@@ -39,11 +51,12 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+// Update current user's profile
+export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user) {
       return new NextResponse(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401 }
@@ -51,43 +64,30 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { username, email, password, role = "USER", status = "active" } = body
+    const { username, email } = body
 
-    // Validate required fields
-    if (!username || !email || !password) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Username, email, and password are required' }),
-        { status: 400 }
-      )
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    const user = await prisma.user.create({
+    // Users can only update their own username and email
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
       data: {
-        username,
-        email,
-        password: hashedPassword,
-        role,
-        status
+        ...(username && { username }),
+        ...(email && { email }),
       },
       select: {
         id: true,
         username: true,
         email: true,
         role: true,
-        status: true,
-        createdAt: true
+        status: true
       }
     })
 
-    return NextResponse.json(user)
+    return NextResponse.json(updatedUser)
   } catch (error) {
-    console.error('Error creating user:', error)
+    console.error('Error updating user profile:', error)
     return new NextResponse(
       JSON.stringify({ error: 'Internal Server Error' }),
       { status: 500 }
     )
   }
-} 
+}
