@@ -5,7 +5,7 @@ import { Role } from "@prisma/client"
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password, role = "USER" } = await req.json()
+    const { username, email, password } = await req.json()
 
     // Validate input
     if (!username || !email || !password) {
@@ -42,13 +42,12 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create new user
+    // Create new user with default USER role
     const user = await prisma.user.create({
       data: {
         username,
         email,
         password: hashedPassword,
-        role: role as Role,
       }
     })
 

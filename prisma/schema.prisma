@@ -20,8 +20,8 @@ model User {
   username          String        @unique
   email             String        @unique
   password          String
-  role              String        @default("USER")
-  status            String        @default("active")
+  role              Role          @default(USER)
+  status            Status        @default(ACTIVE)
   stripeCustomerId  String?      @unique
   subscriptions     Subscription[]
   createdAt         DateTime      @default(now())
